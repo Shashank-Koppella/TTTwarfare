@@ -15,3 +15,5 @@ Also i want the symbol to appear over the centre of the the subboard which has w
 
 Also when a board has won the symbol of the winning board only appears after hovering over the board and not permanently so try fixing that as well
 the fix for this should be placing the calculations before the highlighting effect
+
+final one is i want the size of the symbols smaller so they fit and look nice inside the subcell, ideally 20% smaller than what they currently are
