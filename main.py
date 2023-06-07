@@ -5,15 +5,18 @@ from pygame.locals import *
 pygame.init()
 
 # Screen
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+info = pygame.display.Info()
+screen_width = info.current_w
+screen_height = info.current_h - 60
+screen = pygame.display.set_mode((screen_width, screen_height))
 
 # Title
 pygame.display.set_caption("TicTacToe Warfare")
 
 # Board
 board_length = min(screen.get_width(), screen.get_height()) * 0.9
-board_x = (screen.get_width() - board_length) // 2
-board_y = (screen.get_height() - board_length) // 2
+board_x = (screen_width - board_length) // 2
+board_y = (screen_height - board_length) // 2
 board_line_thickness = 10
 
 # Cells
@@ -24,6 +27,7 @@ reduction_factor = 0.8
 
 # Sub-Board
 sub_board_length = cell_length * reduction_factor
+sub_board_win = 0
 
 # Sub-Cells
 sub_cell_length = sub_board_length // 3
@@ -49,7 +53,7 @@ symbol2_image_scaled = pygame.transform.scale(symbol2_image, (symbol_size, symbo
 symbol_offset = (sub_cell_length - symbol_size) // 2
 
 # Initialize the state of each cell
-cell_states = [[[[None for _ in range(3)] for _ in range(3)] for _ in range(3)] for _ in range(3)]
+cell_states = [[[[None for i in range(3)] for i in range(3)] for i in range(3)] for i in range(3)]
 
 # Game Loop
 FPS = 30
@@ -57,13 +61,44 @@ running = True
 clock = pygame.time.Clock()
 current_symbol = symbol1_image_scaled  # Start with symbol1
 
+
+def check_subboard_win(row, col, srow, scol):
+    symbol = cell_states[row][col][srow][scol]
+
+    # Check rows
+    if all(cell_states[row][col][srow][i] == symbol for i in range(3)):
+        return True
+
+    # Check columns
+    if all(cell_states[row][col][i][scol] == symbol for i in range(3)):
+        return True
+
+    # Check diagonal from top-left to bottom-right
+    if (
+            cell_states[row][col][0][0] == symbol
+            and cell_states[row][col][1][1] == symbol
+            and cell_states[row][col][2][2] == symbol
+    ):
+        return True
+
+    # Check diagonal from top-right to bottom-left
+    if (
+            cell_states[row][col][0][2] == symbol
+            and cell_states[row][col][1][1] == symbol
+            and cell_states[row][col][2][0] == symbol
+    ):
+        return True
+
+    return False
+
+
 while running:
     clock.tick(FPS)
 
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
         running = False
-    elif event.type == pygame.MOUSEBUTTONUP:
+    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
         mouse_x, mouse_y = pygame.mouse.get_pos()
 
         if board_x <= mouse_x <= board_x + board_length and board_y <= mouse_y <= board_y + board_length:
@@ -80,16 +115,21 @@ while running:
             )
 
             if (
-                0 <= sub_cell_col < 3
-                and 0 <= sub_cell_row < 3
-                and cell_states[cell_row][cell_col][sub_cell_row][sub_cell_col] is None
+                    0 <= sub_cell_col < 3
+                    and 0 <= sub_cell_row < 3
+                    and cell_states[cell_row][cell_col][sub_cell_row][sub_cell_col] is None
             ):
                 if current_symbol == symbol1_image_scaled:
                     cell_states[cell_row][cell_col][sub_cell_row][sub_cell_col] = "symbol1"
                     current_symbol = symbol2_image_scaled
+                    if check_subboard_win(cell_row, cell_col, sub_cell_row, sub_cell_col):
+                        sub_board_win = current_symbol
                 else:
                     cell_states[cell_row][cell_col][sub_cell_row][sub_cell_col] = "symbol2"
                     current_symbol = symbol1_image_scaled
+                    check_subboard_win(cell_row, cell_col, sub_cell_row, sub_cell_col)
+                    if check_subboard_win(cell_row, cell_col, sub_cell_row, sub_cell_col):
+                        sub_board_win = current_symbol
 
     screen.fill(Background_Colour)
 
@@ -112,9 +152,9 @@ while running:
         )
 
         if (
-            0 <= sub_cell_col < 3
-            and 0 <= sub_cell_row < 3
-            and cell_states[cell_row][cell_col][sub_cell_row][sub_cell_col] is None
+                0 <= sub_cell_col < 3
+                and 0 <= sub_cell_row < 3
+                and cell_states[cell_row][cell_col][sub_cell_row][sub_cell_col] is None
         ):
             highlighted_sub_cell = (cell_col, cell_row, sub_cell_col, sub_cell_row)
 
@@ -163,13 +203,13 @@ while running:
                     sub_board_cell_y = sub_board_y + sub_cell_row * sub_cell_length
 
                     if (
-                        cell_states[cell_row][cell_col][sub_cell_row][sub_cell_col] == "symbol1"
-                        and (cell_col, cell_row, sub_cell_col, sub_cell_row) != highlighted_sub_cell
+                            cell_states[cell_row][cell_col][sub_cell_row][sub_cell_col] == "symbol1"
+                            and (cell_col, cell_row, sub_cell_col, sub_cell_row) != highlighted_sub_cell
                     ):
                         screen.blit(symbol1_image, (sub_board_cell_x, sub_board_cell_y))
                     elif (
-                        cell_states[cell_row][cell_col][sub_cell_row][sub_cell_col] == "symbol2"
-                        and (cell_col, cell_row, sub_cell_col, sub_cell_row) != highlighted_sub_cell
+                            cell_states[cell_row][cell_col][sub_cell_row][sub_cell_col] == "symbol2"
+                            and (cell_col, cell_row, sub_cell_col, sub_cell_row) != highlighted_sub_cell
                     ):
                         screen.blit(symbol2_image, (sub_board_cell_x, sub_board_cell_y))
 
@@ -189,6 +229,11 @@ while running:
                             screen.blit(
                                 symbol2_image,
                                 (sub_board_cell_x, sub_board_cell_y),
+                            )
+                        if sub_board_win != 0:
+                            screen.blit(
+                                sub_board_win,
+                                (board_x,board_y),
                             )
 
     pygame.display.flip()
