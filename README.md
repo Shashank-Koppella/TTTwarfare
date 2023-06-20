@@ -1,5 +1,9 @@
 How To Play:
 
+Download the repository as a zip file and then extract to wherever desired. Then run the main.exe file in the folder.
+
+RULES:
+
 The game consists of a tic tac toe board, each cell of this tic tac toe board has a smaller board inside it known as a sub-board, while each cell of a sub-board is
 called a sub-cell.
 
