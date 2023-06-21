@@ -23,4 +23,4 @@ left clicking on a subcell will result in using a missile while right clicking w
 every 15 turns the teams will recieve a missile, if used, a missile will delete whatever symbol is placed in that specific subcell
 every time a team wins a subboard they will recieve a nuke, if used, a nuke will delete all symbols in the subboard irrespective of team
 
-using a power up will use up the turn of the current player 
+using a power up will use up the turn of the current player and they cannot be used on subboard which have an already declared winner 
